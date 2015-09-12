@@ -18,4 +18,15 @@ class MyModPayment extends PaymentModule
 		$this->displayName = $this->l('MyMod Payment');
 		$this->description = $this->l('A simple payment module');
 	}
+
+	public function install()
+	{
+		// Register module to the hooks
+		if (!parent::install ||
+			!$this->registerHook('displayPayment') ||
+			!$this->registerHook('displayPaymentReturn'))
+				return false;
+
+		return true;
+	}
 }
