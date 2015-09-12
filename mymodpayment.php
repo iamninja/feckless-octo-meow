@@ -22,11 +22,31 @@ class MyModPayment extends PaymentModule
 	public function install()
 	{
 		// Register module to the hooks
-		if (!parent::install ||
+		if (!parent::install() ||
 			!$this->registerHook('displayPayment') ||
 			!$this->registerHook('displayPaymentReturn'))
 				return false;
 
 		return true;
+	}
+
+	public function getHookController($hook_name)
+	{
+		// Include the controller file
+		require_once(dirname(__FILE__).'/controllers/hook/'.$hook_name.'.php');
+
+		// Build the controller name dynamically
+		$controller_name = $this->name.$hook_name.'Controller';
+
+		// Instantiate controller
+		$controller = new $controller_name($this, __FILE__, $this->_path);
+
+		return $controller;
+	}
+
+	public function hookDisplayPayment($params)
+	{
+		$controller = $this->getHookController('displayPayment');
+		return $controller->run($params);
 	}
 }
