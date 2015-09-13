@@ -27,6 +27,10 @@ class MyModPayment extends PaymentModule
 			!$this->registerHook('displayPaymentReturn'))
 				return false;
 
+		// Add an order state
+		if (!$this->installOrderState())
+			return false;
+
 		return true;
 	}
 
@@ -59,5 +63,37 @@ class MyModPayment extends PaymentModule
 	{
 		$controller = $this->getHookController('getContent');
 		return $controller->run();
+	}
+
+	public function installOrderState()
+	{
+		if (Configuration::get('PS_OS_MYMOD_PAYMENT') < 1)
+		{
+			$order_state = new OrderState();
+			$order_state->send_email = false;
+			$order_state->module_name -> $this->name;
+			$order_state->invoice = false;
+			$order_state->color = '#98c3ff';
+			$order_state->logable = true;
+			$order_state->shipped = false;
+			$order_state->unremovable = false;
+			$order_state->delivery = false;
+			$order_state->hidden = false;
+			$order_state->paid = false;
+			$order_state->deleted = false;
+			$order_state->name = array((int)Configuration::get('PS_LANG_DEFAULT') => pSQL($this->l('MyMod Payment - Awaiting confirmation')));
+
+			if ($order_state->add())
+			{
+				// Save the order state id in confirmation database
+				Configuration::updateValue('PS_OS_MYMOD_PAYMENT', $order_state->id);
+				// Coppy the module logo in order state logo directory
+				copy(dirname(__FILE__).'/logo.png', dirname(__FILE__).'/../../img/os/'.$order_state->id.'.png');
+				copy(dirname(__FILE__).'/logo.png', dirname(__FILE__).'/../../img/tmp/order_state_mini_'.$order_state->id.'.png');
+			}
+			else
+				return false;
+		}
+		return true;
 	}
 }
